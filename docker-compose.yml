@@ -1,0 +1,29 @@
+version: '3'
+services:
+  web:
+    build: .
+    command: uvicorn main:app --host 0.0.0.0 --port 7862
+    ports:
+      - "7862:7862"
+    env_file: .env
+    depends_on:
+      - db
+      - redis
+  celery:
+    build: .
+    command: celery -A celery_app worker --loglevel=info
+    env_file: .env
+    depends_on:
+      - redis
+  redis:
+    image: redis
+    ports:
+      - "6379:6379"
+  db:
+    image: postgres
+    environment:
+      POSTGRES_DB: task_manager
+      POSTGRES_USER: root
+      POSTGRES_PASSWORD: Apply2025!
+    ports:
+      - "5432:5432"
