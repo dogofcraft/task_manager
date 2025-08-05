@@ -1,5 +1,6 @@
 from sqlalchemy import Column, Integer, String, Enum, Text, TIMESTAMP, func
 from sqlalchemy.ext.declarative import declarative_base
+from datetime import datetime
 
 Base = declarative_base()
 
@@ -12,5 +13,7 @@ class Task(Base):
     priority = Column(Integer, default=0)
     retries = Column(Integer, default=0)
     last_error = Column(Text)
-    created_at = Column(TIMESTAMP, server_default=func.now())
-    updated_at = Column(TIMESTAMP, server_default=func.now(), onupdate=func.now())
+    # created_at = Column(TIMESTAMP, server_default=func.now())
+    # updated_at = Column(TIMESTAMP, server_default=func.now(), onupdate=func.now())    
+    created_at = Column(TIMESTAMP, default=datetime.utcnow)
+    updated_at = Column(TIMESTAMP, default=datetime.utcnow, onupdate=datetime.utcnow)
