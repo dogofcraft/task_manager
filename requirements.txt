@@ -6,3 +6,5 @@ sqlalchemy==2.0.31
 psycopg2-binary==2.9.9
 python-dotenv==1.0.1
 sse-starlette==2.1.2  # SSE 支持
+python-jose==3.5.0  # JWT 支持
+prometheus-client==0.22.1  # Prometheus 支持

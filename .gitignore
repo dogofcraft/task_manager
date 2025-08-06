@@ -2,3 +2,8 @@
 *.db
 /logs
 /data
+.env
+*.pyc
+*.pyo
+/data
+.vscode
