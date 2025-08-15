@@ -8,6 +8,7 @@ class Task(Base):
     __tablename__ = 'tasks'
     task_id = Column(String, primary_key=True)
     user_id = Column(String)
+    service_type = Column(String)
     status = Column(String)  # 总状态
     current_stage = Column(String)  # 当前阶段
     percent = Column(Float)  # 总进度

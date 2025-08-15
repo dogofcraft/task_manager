@@ -35,7 +35,7 @@ def get_db():
 def submit_task(service_type: str = Form(...), db: Session = Depends(get_db)):
     # 提交单个任务，生成唯一 task_id，入库并异步触发 Celery 任务
     task_id = str(uuid.uuid4())
-    db_task = Task(id=task_id, service_type=service_type, status='Pending')
+    db_task = Task(task_id=task_id, service_type=service_type, status='Pending')
     db.add(db_task)
     db.commit()
     process_task.delay(task_id, service_type)  # 触发 Celery
@@ -44,10 +44,10 @@ def submit_task(service_type: str = Form(...), db: Session = Depends(get_db)):
 @app.get("/tasks/{task_id}")
 def get_task(task_id: str, db: Session = Depends(get_db)):
     # 查询单个任务进度（优先 Redis，回退数据库），返回任务状态和进度百分比
-    task = db.query(Task).filter(Task.id == task_id).first()
+    task = db.query(Task).filter(Task.task_id == task_id).first()
     if not task:
         raise HTTPException(404, "Task not found")
-    progress = redis_client.get(f'task_progress:{task_id}') or task.progress
+    progress = redis_client.get(f'task_progress:{task_id}') or task.percent
     return {"status": task.status, "progress": int(progress)}
 
 @app.get("/tasks/{task_id}/events")
