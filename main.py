@@ -6,6 +6,8 @@ from models import Base, Task
 from tasks import *
 from sse_starlette.sse import EventSourceResponse
 from dotenv import load_dotenv
+from datetime import datetime
+from config import TASK_STAGES
 import os
 import uuid
 import asyncio
@@ -60,13 +62,35 @@ async def task_events(task_id: str):
     return EventSourceResponse(event_generator())
 
 @app.post("/api/v1/tasks")
-async def register_tasks(files: list[UploadFile] = File(...), token: str = Depends(oauth2_scheme)):
+async def register_tasks(
+    service_type: str = Form(...),
+    files: list[UploadFile] = File(...),
+    token: str = Depends(oauth2_scheme),
+    db: Session = Depends(get_db),
+):
     # 批量注册任务，支持文件上传，校验用户权限，返回所有 task_id
-    user = verify_token(token)
+    user_id = verify_token(token)
     task_ids = []
-    for file in files:
-        # 保存文件、注册任务
-        task_id = asyncio.create_task(file, user)
+    upload_dir = "uploads"
+    os.makedirs(upload_dir, exist_ok=True)
+    for upload in files:
+        task_id = str(uuid.uuid4())
+        file_path = os.path.join(upload_dir, f"{task_id}_{upload.filename}")
+        with open(file_path, "wb") as f:
+            f.write(await upload.read())
+        db_task = Task(
+            task_id=task_id,
+            user_id=user_id,
+            status="queued",
+            current_stage="queued",
+            percent=0,
+            stages={stage: 0 for stage in TASK_STAGES},
+            created_at=datetime.utcnow(),
+            updated_at=datetime.utcnow(),
+        )
+        db.add(db_task)
+        db.commit()
+        process_task.delay(task_id, service_type)
         task_ids.append(task_id)
     return {"task_ids": task_ids}
 
